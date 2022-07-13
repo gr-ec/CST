@@ -10,12 +10,6 @@ namespace CST
   class Program
   {
     /// <summary>
-    /// Stores category discovery functions <see cref="Trade"/>.
-    /// </summary>
-    delegate void TradeCategory(DateTime refDate, Trade trade);
-    static TradeCategory CategoryDiscoveryDelegates;
-
-    /// <summary>
     /// Get input lines from user
     /// </summary>
     private static List<string> GetInputLines()
@@ -54,6 +48,8 @@ namespace CST
         errors.Add("Invalid number of trades! (use integer numbers above 0)");
       }
 
+      var tradeCategories = new List<ITradeCategory>() { new ExpiredCategory(), new HighRiskCategory(), new MediumRiskCategory() };
+
       foreach (var l in lines.GetRange(2, tradesNo))
       {
         var tradeDataParts = l.Trim().Split(' ');
@@ -66,7 +62,12 @@ namespace CST
               if (DateTime.TryParseExact(tradeDataParts[2], "MM/dd/yyyy", new CultureInfo("en-US"), DateTimeStyles.None, out DateTime nextPaymentDate))
               {
                 var trade = new Trade(tradeValue, tradeDataParts[1].Trim(), nextPaymentDate);
-                CategoryDiscoveryDelegates(refDate, trade);
+
+                foreach( var tc in tradeCategories)
+                {
+                  tc.SetTradeCategory(refDate, trade);
+                }
+
                 trades.Add(trade);
               }
               else
@@ -86,7 +87,7 @@ namespace CST
         }
         else
         {
-          errors.Add("You must inform three fields for trade fields");
+          errors.Add("You must inform four fields for trade fields");
         }
       }
 
@@ -96,13 +97,6 @@ namespace CST
     
     static void Main(string[] args)
     {
-      //subscribe all trade functions in order of precedence
-      CategoryDiscoveryDelegates += Trade.TradeExpired;
-      CategoryDiscoveryDelegates += Trade.TradeHighRisk;
-      CategoryDiscoveryDelegates += Trade.TradeMediumRisk;
-
-      //unsubscribe trade functions on demand
-
       var tradeData = ParseTrades(GetInputLines());
 
       if (tradeData.Item2.Any())

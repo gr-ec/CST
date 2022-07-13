@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CST
 {
-  class Trade : ITrade
+  public class Trade : ITrade
   {
     public Trade(double value, string clientSector, DateTime nextPaymentDate)
     {
@@ -41,7 +41,7 @@ namespace CST
     /// <summary>
     /// Set trade's category.
     /// </summary>
-    private void SetCategory(string category)
+    public void SetCategory(string category)
     {
       if (string.IsNullOrEmpty(this.Category))
       {
@@ -69,29 +69,5 @@ namespace CST
     {
       return ClientSectorType(this.ClientSector);
     }
-
-    #region category discovery delegates
-    public static void TradeExpired(DateTime refDate, Trade trade)
-    {
-      if (refDate.Subtract(trade.NextPaymentDate).TotalDays > 30)
-      {
-        trade.SetCategory("EXPIRED");
-      }
-    }
-    public static void TradeHighRisk(DateTime refDate, Trade trade)
-    {
-      if (trade.Value > 1000000 && trade.MyClientSectorType() == ClientSectorTypes.privateSector)
-      {
-        trade.SetCategory("HIGHRISK");
-      }
-    }
-    public static void TradeMediumRisk(DateTime refDate, Trade trade)
-    {
-      if (trade.Value > 1000000 && trade.MyClientSectorType() == ClientSectorTypes.publicSector)
-      {
-        trade.SetCategory("MEDIUMRISK");
-      }
-    }
-    #endregion
   }
 }
